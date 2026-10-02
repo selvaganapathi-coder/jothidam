@@ -20,7 +20,8 @@ export function getFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
 }
 
 export async function getFirebaseAppCheckToken(): Promise<string | null> {
-  const instance = getFirebaseAppCheck();
+  const { getFirebaseApp } = await import("@/lib/firebase/client");
+  const instance = getFirebaseAppCheck(getFirebaseApp());
   if (!instance) return null;
   const result = await getToken(instance, false);
   return result.token;
