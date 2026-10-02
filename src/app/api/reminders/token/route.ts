@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { z } from "zod";
+import { z } from "zod";\nimport { enforceRateLimit, parseJsonBody, rejectUnexpectedOrigin, requestBodyLimits } from "@/lib/security/api";
 
 import {
   getFirebaseAdminAuth,
@@ -13,7 +13,7 @@ export const tokenRequestSchema = z.object({
   enabled: z.boolean(),
   token: z.string().min(100).max(4096).optional(),
   language: z.enum(["ta", "en"]).optional(),
-}).superRefine((data, ctx) => {
+}).strict().superRefine((data, ctx) => {
   if (data.enabled && !data.token) {
     ctx.addIssue({ code: "custom", path: ["token"], message: "Token required when enabling reminders" });
   }
@@ -25,13 +25,13 @@ function getBearerToken(request: Request): string | null {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const bearer = getBearerToken(request);
+  const originError = rejectUnexpectedOrigin(request);\n  if (originError) return originError;\n  const bearer = getBearerToken(request);
   if (!bearer) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const body = tokenRequestSchema.parse(await request.json());
+    const body = await parseJsonBody(request, tokenRequestSchema, requestBodyLimits.reminderToken);
     const decoded = await getFirebaseAdminAuth().verifyIdToken(bearer);
-    const uid = z.string().min(1).parse(decoded.uid);
+    const uid = z.string().min(1).parse(decoded.uid);\n    const rateLimitResponse = await enforceRateLimit(request, uid);\n    if (rateLimitResponse) return rateLimitResponse;
     const ref = getFirebaseAdminFirestore().collection("users").doc(uid);
 
     if (body.enabled) {
