@@ -1,4 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import type { NextRequest } from "next/server";
+
+import { routing } from "./src/i18n/routing";
+
+const handleI18nRouting = createMiddleware(routing);
 
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -22,11 +27,13 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const i18nResponse = handleI18nRouting(request);
+  const response = i18nResponse ?? new Response(null);
   response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("x-nonce", nonce);
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|firebase-messaging-sw.js).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sw.js|firebase-messaging-sw.js).*)"],
 };
