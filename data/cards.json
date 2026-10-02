@@ -5,6 +5,7 @@
     "ta": "இது பொழுதுபோக்கிற்காக மட்டுமே. தொழில்முறை ஆலோசனைக்கு மாற்று அல்ல."
   },
   "rarityWeights": { "common": 70, "rare": 25, "epic": 5 },
+  "festivals": [],
   "cards": [
     { "id": "c01", "rarity": "common", "category": "luck", "symbol": { "en": "Lord Vinayagar", "ta": "விநாயகர்" },
       "message": { "en": "A new beginning is coming. Start the task you have been delaying; obstacles will clear step by step.", "ta": "புதிய தொடக்கம் வரப்போகிறது. தள்ளிப்போட்ட வேலையை இன்றே தொடங்குங்கள்; தடைகள் ஒவ்வொன்றாக விலகும்." } },
