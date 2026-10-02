@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { setRequestLocale } from "next-intl/server";
 
 import { DailyPickExperience } from "@/components/home/daily-pick-experience";
+import { ReminderOptIn } from "@/components/reminders/reminder-opt-in";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
@@ -19,6 +20,7 @@ export default async function HomePage({ params }: HomePageProps) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 pb-10">
       <DailyPickExperience />
+      <div className="px-4"><ReminderOptIn /></div>
       <p className="px-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
         {tDisclaimer("entertainment")}
       </p>
