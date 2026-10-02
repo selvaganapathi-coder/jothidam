@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { enforceRateLimit, rejectUnexpectedOrigin } from "@/lib/security/api";
+import { enforceRateLimit, rejectUnexpectedBody, rejectUnexpectedOrigin } from "@/lib/security/api";
 import { getMessaging } from "firebase-admin/messaging";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -27,9 +27,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (originError) return originError;
   const rateLimitResponse = await enforceRateLimit(request);
   if (rateLimitResponse) return rateLimitResponse;
-  if ((request.headers.get("content-length") ?? "0") !== "0") {
-    return NextResponse.json({ error: "Request body not allowed" }, { status: 400 });
-  }
+  const bodyError = await rejectUnexpectedBody(request);
+  if (bodyError) return bodyError;
   if (!authorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
