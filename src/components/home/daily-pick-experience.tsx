@@ -9,7 +9,7 @@ import type { DailyPickViewState } from "@/components/home/daily-pick-types";
 import { ParrotCageScene } from "@/components/home/parrot-cage-scene";
 import { ShareCardButton } from "@/components/home/share-card-button";
 import type { AppLocale } from "@/i18n/routing";
-import type { CardRarity } from "@/lib/cards";
+import { cardsCatalog, type CardRarity } from "@/lib/cards";\nimport { getActiveFestivals } from "@/lib/festivals";
 import { requestDailyPick, type RequestPickFn } from "@/lib/request-daily-pick";
 
 const CARD_COUNT = 5;
@@ -93,11 +93,11 @@ export function DailyPickExperience({ requestPick = requestDailyPick, initialVie
 
   const pickDisabled = viewState.kind === "loading" || (viewState.kind === "result" && viewState.alreadyPicked);
   const streak = isResult ? viewState.streak : streakCount;
-  const longestStreak = isResult ? viewState.longestStreak : streakCount;
+  const longestStreak = isResult ? viewState.longestStreak : streakCount;\n  const activeFestival = getActiveFestivals(cardsCatalog)[0];
 
   return (
     <section className="mx-auto flex w-full max-w-[360px] flex-col gap-5 px-4 py-6" aria-live="polite" data-testid="daily-pick-experience" data-status={statusLabel}>
-      <ParrotCageScene isAnimating={isLoading} />
+      {activeFestival ? (\n        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950" data-testid="festival-banner">\n          {activeFestival.name[locale]}\n        </div>\n      ) : null}\n      <ParrotCageScene isAnimating={isLoading} />
       <div className="flex justify-center gap-2" data-testid="fortune-card-deck">
         {Array.from({ length: CARD_COUNT }).map((_, index) => {
           const isFlipped = isResult && flippedIndex === index;
