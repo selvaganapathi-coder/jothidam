@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { FirebaseAuthProvider } from "@/components/firebase-auth-provider";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { SiteHeader } from "@/components/site-header";
 import { routing, type AppLocale } from "@/i18n/routing";
 
@@ -60,8 +62,10 @@ export default async function LocaleLayout({
       <body className={`flex min-h-full flex-col ${bodyFont}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <FirebaseAuthProvider>
+            <RegisterServiceWorker />
             <SiteHeader />
             {children}
+            <InstallPrompt locale={appLocale} />
           </FirebaseAuthProvider>
         </NextIntlClientProvider>
       </body>
