@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FieldPath } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
 import {
@@ -45,7 +45,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     } else {
       await ref.update({
         "settings.reminderOptIn": false,
-        "settings.fcmToken": FieldPath.delete(),
+        "settings.fcmToken": FieldValue.delete(),
       });
     }
 
