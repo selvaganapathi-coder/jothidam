@@ -85,10 +85,13 @@ export const STREAK_MILESTONES = [
 export function getMilestoneRewards(
   previousStreak: number,
   currentStreak: number,
+  existingBadges: string[] = [],
 ): { badges: string[]; secondPickTokens: number } {
   const rewards = STREAK_MILESTONES.filter(
     (milestone) =>
-      milestone.streak > previousStreak && milestone.streak <= currentStreak,
+      milestone.streak > previousStreak &&
+      milestone.streak <= currentStreak &&
+      !existingBadges.includes(milestone.badge),
   );
 
   return {
