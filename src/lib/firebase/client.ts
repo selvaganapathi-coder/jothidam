@@ -5,6 +5,7 @@ import {
   connectAuthEmulator,
   getAuth,
   signInAnonymously,
+  signOut,
   type Auth,
   type User,
 } from "firebase/auth";
@@ -90,4 +91,11 @@ export function ensureAnonymousAuth(): Promise<User> {
   }
 
   return anonymousSignInPromise;
+}
+
+export async function reauthenticateAnonymously(): Promise<User> {
+  const auth = getFirebaseAuth();
+  anonymousSignInPromise = null;
+  await signOut(auth);
+  return ensureAnonymousAuth();
 }
