@@ -1,5 +1,28 @@
 {
+  "app": {
+    "title": "Kili Jothidam",
+    "tagline": "Draw a daily Tamil fortune card for fun and reflection."
+  },
   "home": {
-    "title": "Kili Jothidam"
+    "pickCard": "Pick my card",
+    "comeBackTomorrow": "Come back tomorrow for your next card.",
+    "streak": "Day streak: {count, plural, one {# day} other {# days}}"
+  },
+  "collection": {
+    "title": "My collection",
+    "description": "Cards you have collected appear here.",
+    "empty": "No cards collected yet. Pick your first card today."
+  },
+  "language": {
+    "switch": "Switch language",
+    "english": "English",
+    "tamil": "Tamil"
+  },
+  "disclaimer": {
+    "entertainment": "For fun and entertainment only. Not a substitute for professional advice."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notFound": "We could not find that page."
   }
 }
