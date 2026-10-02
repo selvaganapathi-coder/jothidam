@@ -14,7 +14,8 @@
     "firebase:emulators": "firebase emulators:start --only auth,firestore",
     "firebase:use:dev": "firebase use dev",
     "firebase:use:prod": "firebase use prod",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:rules": "vitest run tests/firestore-rules.test.ts"
   },
   "dependencies": {
     "firebase": "^12.19.0",
@@ -49,7 +50,8 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "@firebase/rules-unit-testing": "^5.0.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
