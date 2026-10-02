@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { CollectionGrid } from "@/components/collection/collection-grid";
 import en from "@/messages/en.json";
+import ta from "@/messages/ta.json";
 
 const renderCollection = (collection: Record<string, number>) =>
   render(
@@ -34,6 +35,18 @@ describe("CollectionGrid", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("collection-count")).toHaveTextContent("4/30");
+    });
+  });
+
+  it("renders localized Tamil card text", async () => {
+    render(
+      <NextIntlClientProvider locale="ta" messages={ta}>
+        <CollectionGrid loadCollection={async () => ({ c01: 1 })} />
+      </NextIntlClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("collection-card-c01")).toHaveTextContent("விநாயகர்");
     });
   });
 
