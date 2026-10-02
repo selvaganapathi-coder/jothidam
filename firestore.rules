@@ -2,6 +2,50 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validSettings(settings) {
+      return settings is map
+        && settings.keys().size() <= 2
+        && settings.keys().hasOnly(['language', 'reminderOptIn'])
+        && (
+          !settings.keys().hasAny(['language'])
+          || (
+            settings.language is string
+            && settings.language.size() <= 10
+          )
+        )
+        && (
+          !settings.keys().hasAny(['reminderOptIn'])
+          || settings.reminderOptIn is bool
+        );
+    }
+
+    match /users/{uid} {
+      allow read: if signedInAs(uid);
+
+      // Clients may create only their settings map. All server-owned
+      // daily-pick fields are intentionally excluded from this allowlist.
+      allow create: if signedInAs(uid)
+        && request.resource.data.keys().hasOnly(['settings'])
+        && validSettings(request.resource.data.settings);
+
+      // Clients may update only the settings map. Admin SDK writes bypass
+      // Firestore Security Rules and remain responsible for server fields.
+      allow update: if signedInAs(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings'])
+        && validSettings(request.resource.data.settings);
+
+      allow delete: if false;
+    }
+
+    match /cards/{cardId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
