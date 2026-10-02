@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { z } from "zod";
-import { enforceRateLimit, rejectUnexpectedOrigin } from "@/lib/security/api";
+import { enforceRateLimit, rejectUnexpectedBody, rejectUnexpectedOrigin } from "@/lib/security/api";
 
 import { cardsCatalog, getCardById } from "@/lib/cards";
 
@@ -32,9 +32,8 @@ export async function GET(request: Request) {
   if (originError) return originError;
   const rateLimitResponse = await enforceRateLimit(request);
   if (rateLimitResponse) return rateLimitResponse;
-  if ((request.headers.get("content-length") ?? "0") !== "0") {
-    return Response.json({ error: "Request body not allowed" }, { status: 400 });
-  }
+  const bodyError = await rejectUnexpectedBody(request);
+  if (bodyError) return bodyError;
   const parsed = parseOgQuery(request.url);
   if (!parsed.success) {
     return Response.json({ error: "Invalid OG card request" }, { status: 400 });
