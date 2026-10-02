@@ -1,4 +1,5 @@
 import { ensureAnonymousAuth, reauthenticateAnonymously } from "@/lib/firebase/client";
+import { getFirebaseAppCheckToken } from "@/lib/firebase/app-check";
 import type { Card } from "@/lib/cards";
 
 export type DailyPickApiResponse = {
@@ -19,11 +20,11 @@ export type RequestPickFn = () => Promise<RequestPickResult>;
 
 async function postPick(): Promise<Response> {
   const user = await ensureAnonymousAuth();
-  const token = await user.getIdToken();
+  const token = await user.getIdToken();\n  const appCheckToken = await getFirebaseAppCheckToken();
 
   return fetch("/api/pick", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {\n      Authorization: `Bearer ${token}`,\n      ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),\n    },
     cache: "no-store",
   });
 }

@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { z } from "zod";
+import { enforceRateLimit, rejectUnexpectedBody, rejectUnexpectedOrigin } from "@/lib/security/api";
 
 import { cardsCatalog, getCardById } from "@/lib/cards";
 
@@ -27,6 +28,12 @@ export function parseOgQuery(url: string) {
 }
 
 export async function GET(request: Request) {
+  const originError = rejectUnexpectedOrigin(request);
+  if (originError) return originError;
+  const rateLimitResponse = await enforceRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
+  const bodyError = await rejectUnexpectedBody(request);
+  if (bodyError) return bodyError;
   const parsed = parseOgQuery(request.url);
   if (!parsed.success) {
     return Response.json({ error: "Invalid OG card request" }, { status: 400 });

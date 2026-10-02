@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit, rejectUnexpectedBody, rejectUnexpectedOrigin } from "@/lib/security/api";
 import { getMessaging } from "firebase-admin/messaging";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -22,6 +23,12 @@ function authorizedCron(request: Request): boolean {
 }
 
 export async function GET(request: Request): Promise<NextResponse> {
+  const originError = rejectUnexpectedOrigin(request);
+  if (originError) return originError;
+  const rateLimitResponse = await enforceRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
+  const bodyError = await rejectUnexpectedBody(request);
+  if (bodyError) return bodyError;
   if (!authorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

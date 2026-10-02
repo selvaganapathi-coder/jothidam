@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
+import { verifyAppCheck } from "@/lib/firebase/admin-app-check";
+import { enforceRateLimit, parseJsonBody, rejectUnexpectedOrigin, requestBodyLimits } from "@/lib/security/api";
+
 import { cardSchema, getCardById, pickCard } from "@/lib/cards";
 import {
   getFirebaseAdminAuth,
@@ -20,7 +23,7 @@ const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const requestBodySchema = z.object({
   useSecondPickToken: z.boolean().default(false),
-});
+}).strict();
 
 const userStateSchema = z.object({
   lastPickDate: dateKeySchema.optional(),
@@ -67,6 +70,9 @@ function genericErrorResponse(): NextResponse {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const originError = rejectUnexpectedOrigin(request);
+  if (originError) return originError;
+
   const token = getBearerToken(request);
 
   if (!token) {
@@ -79,6 +85,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     const auth = getFirebaseAdminAuth();
     const decodedToken = await auth.verifyIdToken(token);
     const uid = z.string().min(1).parse(decodedToken.uid);
+    if (!(await verifyAppCheck(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rateLimitResponse = await enforceRateLimit(request, uid);
+    if (rateLimitResponse) return rateLimitResponse;
+    const body = await parseJsonBody(request, requestBodySchema, requestBodyLimits.pick);
 
     const today = getDateKey();
     const nextPickAt = getNextPickAt(today);

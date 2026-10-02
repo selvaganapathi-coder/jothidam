@@ -1,6 +1,6 @@
 "use client";
 
-import { type FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
+import { type FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";\nimport { getFirebaseAppCheck } from "@/lib/firebase/app-check";
 import {
   connectAuthEmulator,
   getAuth,
