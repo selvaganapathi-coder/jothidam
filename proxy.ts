@@ -9,11 +9,12 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' https://www.gstatic.com/recaptcha/ https://www.google.com/recaptcha/ 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'nonce-${nonce}'`,
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
     "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://recaptchaenterprise.googleapis.com",
+    "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
