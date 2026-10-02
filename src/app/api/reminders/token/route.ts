@@ -9,7 +9,7 @@ import {
 
 const authorizationSchema = z.string().regex(/^Bearer\s+\S+$/i);
 
-const tokenRequestSchema = z.object({
+export const tokenRequestSchema = z.object({
   enabled: z.boolean(),
   token: z.string().min(100).max(4096).optional(),
   language: z.enum(["ta", "en"]).optional(),
