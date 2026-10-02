@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod";\n\nimport { getActiveFestivals, getFestivalBoost } from "@/lib/festivals";
 
 import rawCardsData from "../../data/cards.json";
 

@@ -11,7 +11,9 @@
     "tryAgain": "Try again",
     "streak": "Day streak: {count, plural, one {# day} other {# days}}",
     "nextPickIn": "Next pick in {time} IST",
-    "longestStreak": "Longest: {count}"
+    "longestStreak": "Longest: {count}",
+    "shareCard": "Share card",
+    "linkCopied": "Link copied"
   },
   "cardRarity": {
     "common": "Common",
@@ -21,7 +23,11 @@
   "collection": {
     "title": "My collection",
     "description": "Cards you have collected appear here.",
-    "empty": "No cards collected yet. Pick your first card today."
+    "empty": "No cards collected yet. Pick your first card today.",
+    "all": "All",
+    "rarityFilter": "Filter by rarity",
+    "locked": "Undiscovered",
+    "error": "Could not load your collection. Please try again."
   },
   "language": {
     "switch": "Switch language",

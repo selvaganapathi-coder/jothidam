@@ -10,12 +10,17 @@ import {
 import {
   calculateStreak,
   getDateKey,
+  getMilestoneRewards,
   getNextPickAt,
 } from "@/lib/streak";
 
 const authorizationSchema = z.string().regex(/^Bearer\s+\S+$/i);
 
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+const requestBodySchema = z.object({
+  useSecondPickToken: z.boolean().default(false),
+});
 
 const userStateSchema = z.object({
   lastPickDate: dateKeySchema.optional(),
@@ -24,6 +29,8 @@ const userStateSchema = z.object({
   longestStreak: z.number().int().nonnegative().default(0),
   collection: z.record(z.string(), z.number().int().nonnegative()).default({}),
   totalPicks: z.number().int().nonnegative().default(0),
+  badges: z.array(z.string().min(1)).default([]),
+  secondPickTokens: z.number().int().nonnegative().default(0),
 });
 
 const responseSchema = z.object({
@@ -32,6 +39,9 @@ const responseSchema = z.object({
   longestStreak: z.number().int().positive(),
   alreadyPicked: z.boolean(),
   nextPickAt: z.string().datetime({ offset: true }),
+  secondPickTokenUsed: z.boolean(),
+  secondPickTokens: z.number().int().nonnegative(),
+  badges: z.array(z.string().min(1)),
 });
 
 const GENERIC_ERROR = "Unable to process daily pick.";
@@ -64,6 +74,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
+    const rawBody = await request.text();
+    const body = requestBodySchema.parse(rawBody ? JSON.parse(rawBody) : {});
     const auth = getFirebaseAdminAuth();
     const decodedToken = await auth.verifyIdToken(token);
     const uid = z.string().min(1).parse(decodedToken.uid);
@@ -78,6 +90,37 @@ export async function POST(request: Request): Promise<NextResponse> {
       const userState = userStateSchema.parse(
         snapshot.exists ? snapshot.data() : {},
       );
+
+      if (
+        userState.lastPickDate === today &&
+        body.useSecondPickToken &&
+        userState.secondPickTokens > 0
+      ) {
+        const card = cardSchema.parse(pickCard());
+        const nextTokens = userState.secondPickTokens - 1;
+
+        transaction.set(
+          userRef,
+          {
+            lastPickCardId: card.id,
+            totalPicks: FieldValue.increment(1),
+            secondPickTokens: nextTokens,
+            [`collection.${card.id}`]: FieldValue.increment(1),
+          },
+          { merge: true },
+        );
+
+        return {
+          card,
+          streak: Math.max(userState.streak, 1),
+          longestStreak: Math.max(userState.longestStreak, 1),
+          alreadyPicked: false,
+          nextPickAt,
+          secondPickTokenUsed: true,
+          secondPickTokens: nextTokens,
+          badges: userState.badges,
+        };
+      }
 
       if (userState.lastPickDate === today) {
         if (!userState.lastPickCardId) {
@@ -96,6 +139,9 @@ export async function POST(request: Request): Promise<NextResponse> {
           longestStreak: Math.max(userState.longestStreak, 1),
           alreadyPicked: true,
           nextPickAt,
+          secondPickTokenUsed: false,
+          secondPickTokens: userState.secondPickTokens,
+          badges: userState.badges,
         };
       }
 
@@ -106,6 +152,16 @@ export async function POST(request: Request): Promise<NextResponse> {
         userState.streak,
       );
       const longestStreak = Math.max(userState.longestStreak, streak);
+      const milestoneRewards = getMilestoneRewards(
+        userState.streak,
+        streak,
+        userState.badges,
+      );
+      const badges = Array.from(
+        new Set([...userState.badges, ...milestoneRewards.badges]),
+      );
+      const secondPickTokens =
+        userState.secondPickTokens + milestoneRewards.secondPickTokens;
 
       transaction.set(
         userRef,
@@ -115,6 +171,8 @@ export async function POST(request: Request): Promise<NextResponse> {
           streak,
           longestStreak,
           totalPicks: FieldValue.increment(1),
+          badges,
+          secondPickTokens,
           [`collection.${card.id}`]: FieldValue.increment(1),
         },
         { merge: true },
@@ -126,6 +184,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         longestStreak,
         alreadyPicked: false,
         nextPickAt,
+        secondPickTokenUsed: false,
+        secondPickTokens,
+        badges,
       };
     });
 

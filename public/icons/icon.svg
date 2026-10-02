@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#6B2E5B"/>
+  <circle cx="256" cy="238" r="142" fill="#F7EBDD"/>
+  <path d="M256 126c-48 48-86 83-86 137 0 53 38 94 86 94s86-41 86-94c0-54-38-89-86-137Z" fill="#B94A5A"/>
+  <circle cx="224" cy="232" r="12" fill="#201A17"/>
+  <circle cx="288" cy="232" r="12" fill="#201A17"/>
+  <path d="M224 276c20 16 44 16 64 0" fill="none" stroke="#201A17" stroke-width="10" stroke-linecap="round"/>
+  <text x="256" y="430" text-anchor="middle" font-family="Arial,sans-serif" font-size="44" font-weight="700" fill="#F7EBDD">AANMIGAM</text>
+</svg>

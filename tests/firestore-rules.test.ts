@@ -73,6 +73,8 @@ describe("Firestore Security Rules", () => {
     await assertFails(updateDoc(reference, { lastPickDate: "2026-10-03" }));
     await assertFails(updateDoc(reference, { collection: { c01: 2 } }));
     await assertFails(updateDoc(reference, { totalPicks: 2 }));
+    await assertFails(updateDoc(reference, { secondPickTokens: 2 }));
+    await assertFails(updateDoc(reference, { badges: ["streak-3"] }));
   });
 
   it("denies creating fields outside the allowed settings field", async () => {

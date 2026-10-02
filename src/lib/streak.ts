@@ -74,3 +74,28 @@ export function getNextPickAt(dateKey: string): string {
   // Asia/Kolkata is fixed at UTC+05:30.
   return new Date(nextDayUtc - 5.5 * 60 * 60 * 1000).toISOString();
 }
+
+
+export const STREAK_MILESTONES = [
+  { streak: 3, badge: "streak-3" },
+  { streak: 7, badge: "streak-7" },
+  { streak: 30, badge: "streak-30" },
+] as const;
+
+export function getMilestoneRewards(
+  previousStreak: number,
+  currentStreak: number,
+  existingBadges: string[] = [],
+): { badges: string[]; secondPickTokens: number } {
+  const rewards = STREAK_MILESTONES.filter(
+    (milestone) =>
+      milestone.streak > previousStreak &&
+      milestone.streak <= currentStreak &&
+      !existingBadges.includes(milestone.badge),
+  );
+
+  return {
+    badges: rewards.map((milestone) => milestone.badge),
+    secondPickTokens: rewards.length,
+  };
+}
