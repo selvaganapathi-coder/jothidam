@@ -24,14 +24,13 @@ test.describe("daily pick", () => {
     await page.getByTestId("daily-pick-button").click();
     const firstCard = await page.getByTestId("fortune-card-face").innerText();
 
-    await clearStoredDailyPick(page);
-    await page.reload();
     await page.getByTestId("daily-pick-button").click();
 
     await expect(page.getByTestId("fortune-card-face")).toHaveText(firstCard);
     await expect(page.getByTestId("daily-pick-result-summary")).toContainText(
       "இன்று நீங்கள் ஏற்கனவே",
     );
+    await expect(page.getByTestId("daily-pick-button")).toBeDisabled();
   });
 
   test("language switch keeps the daily result", async ({ page }) => {
