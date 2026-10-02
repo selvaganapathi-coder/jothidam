@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
-import { cardSchema, getCardById, pickCard, type Card } from "@/lib/cards";
+import { cardSchema, getCardById, pickCard } from "@/lib/cards";
 import {
   getFirebaseAdminAuth,
   getFirebaseAdminFirestore,
@@ -13,22 +13,16 @@ import {
   getNextPickAt,
 } from "@/lib/streak";
 
-const authorizationSchema = z
-  .string()
-  .regex(/^Bearer\s+\S+$/i);
+const authorizationSchema = z.string().regex(/^Bearer\s+\S+$/i);
 
-const dateKeySchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/);
+const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const userStateSchema = z.object({
   lastPickDate: dateKeySchema.optional(),
   lastPickCardId: z.string().min(1).optional(),
   streak: z.number().int().nonnegative().default(0),
   longestStreak: z.number().int().nonnegative().default(0),
-  collection: z
-    .record(z.string(), z.number().int().nonnegative())
-    .default({}),
+  collection: z.record(z.string(), z.number().int().nonnegative()).default({}),
   totalPicks: z.number().int().nonnegative().default(0),
 });
 

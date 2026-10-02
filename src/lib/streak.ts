@@ -1,76 +1,42 @@
-const IST_TIME_ZONE = "Asia/Kolkata";
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+import { describe, expect, it } from "vitest";
 
-function parseDateKey(dateKey: string): [number, number, number] {
-  if (!DATE_KEY_PATTERN.test(dateKey)) {
-    throw new Error("Invalid date key");
-  }
+import {
+  calculateStreak,
+  getDateKey,
+  getNextPickAt,
+  getPreviousDateKey,
+} from "@/lib/streak";
 
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return [year, month, day];
-}
+describe("streak date logic", () => {
+  it("continues the streak after yesterday", () => {
+    expect(calculateStreak("2026-10-01", "2026-10-02", 4)).toBe(5);
+  });
 
-function formatDateKey(year: number, month: number, day: number): string {
-  return `${year.toString().padStart(4, "0")}-${month
-    .toString()
-    .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-}
+  it("resets after a gap", () => {
+    expect(calculateStreak("2026-09-30", "2026-10-02", 4)).toBe(1);
+  });
 
-export function getDateKey(
-  date: Date = new Date(),
-  timeZone: string = IST_TIME_ZONE,
-): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
+  it("handles IST midnight boundaries", () => {
+    expect(getDateKey(new Date("2026-10-02T23:59:00+05:30"))).toBe("2026-10-02");
+    expect(getDateKey(new Date("2026-10-03T00:01:00+05:30"))).toBe("2026-10-03");
+  });
 
-  const values: Record<string, string> = {};
-  for (const part of parts) {
-    if (part.type === "year" || part.type === "month" || part.type === "day") {
-      values[part.type] = part.value;
-    }
-  }
+  it("handles month rollover", () => {
+    expect(getPreviousDateKey("2026-03-01")).toBe("2026-02-28");
+    expect(calculateStreak("2026-02-28", "2026-03-01", 2)).toBe(3);
+  });
 
-  if (!values.year || !values.month || !values.day) {
-    throw new Error("Unable to determine date key");
-  }
+  it("handles year rollover", () => {
+    expect(getPreviousDateKey("2027-01-01")).toBe("2026-12-31");
+    expect(calculateStreak("2026-12-31", "2027-01-01", 2)).toBe(3);
+  });
 
-  return `${values.year}-${values.month}-${values.day}`;
-}
+  it("handles leap day", () => {
+    expect(getPreviousDateKey("2028-03-01")).toBe("2028-02-29");
+    expect(calculateStreak("2028-02-29", "2028-03-01", 2)).toBe(3);
+  });
 
-export function getPreviousDateKey(dateKey: string): string {
-  const [year, month, day] = parseDateKey(dateKey);
-  const previous = new Date(Date.UTC(year, month - 1, day - 1));
-
-  return formatDateKey(
-    previous.getUTCFullYear(),
-    previous.getUTCMonth() + 1,
-    previous.getUTCDate(),
-  );
-}
-
-export function isYesterday(
-  lastPickDate: string | undefined,
-  today: string,
-): boolean {
-  return lastPickDate === getPreviousDateKey(today);
-}
-
-export function calculateStreak(
-  lastPickDate: string | undefined,
-  today: string,
-  currentStreak: number,
-): number {
-  return isYesterday(lastPickDate, today) ? currentStreak + 1 : 1;
-}
-
-export function getNextPickAt(dateKey: string): string {
-  const [year, month, day] = parseDateKey(dateKey);
-  const nextDayUtc = Date.UTC(year, month - 1, day + 1);
-
-  // Asia/Kolkata is fixed at UTC+05:30.
-  return new Date(nextDayUtc - 5.5 * 60 * 60 * 1000).toISOString();
-}
+  it("returns the next IST midnight", () => {
+    expect(getNextPickAt("2026-10-02")).toBe("2026-10-02T18:30:00.000Z");
+  });
+});
