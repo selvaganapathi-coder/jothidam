@@ -17,8 +17,8 @@ describe("streak date logic", () => {
   });
 
   it("handles IST midnight boundaries", () => {
-    expect(getDateKey(new Date("2026-10-02T18:29:00.000Z"))).toBe("2026-10-02");
-    expect(getDateKey(new Date("2026-10-02T18:31:00.000Z"))).toBe("2026-10-03");
+    expect(getDateKey(new Date("2026-10-02T23:59:00+05:30"))).toBe("2026-10-02");
+    expect(getDateKey(new Date("2026-10-03T00:01:00+05:30"))).toBe("2026-10-03");
   });
 
   it("handles month rollover", () => {
