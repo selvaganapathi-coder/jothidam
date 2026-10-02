@@ -1,18 +1,18 @@
 "use client";
 
 import { getToken, initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
-import { getFirebaseApp } from "@/lib/firebase/client";
+import type { FirebaseApp } from "firebase/app";
 
 let appCheck: AppCheck | null = null;
 
-export function getFirebaseAppCheck(): AppCheck | null {
+export function getFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
   if (typeof window === "undefined") return null;
   if (appCheck) return appCheck;
 
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!siteKey) return null;
 
-  appCheck = initializeAppCheck(getFirebaseApp(), {
+  appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(siteKey),
     isTokenAutoRefreshEnabled: true,
   });
