@@ -1,0 +1,15 @@
+---
+description: Kili Jothidam project rules
+alwaysApply: true
+---
+- Stack: Next.js App Router, TypeScript strict, Tailwind, Firebase, Vitest, Playwright.
+- Every feature needs tests. Do not finish a task until `pnpm lint && pnpm typecheck && pnpm test` pass.
+- No `any`. Validate all external input with zod.
+- All user-facing text lives in i18n files (messages/en.json, messages/ta.json). No hard-coded strings in components.
+- Daily pick, streak, and collection logic run ONLY on the server (route handlers + Firebase Admin). The client never decides a result.
+- Day boundaries use the Asia/Kolkata timezone (IST).
+- Never expose secrets to the client. Only NEXT_PUBLIC_* values may be public.
+- Never log tokens, emails, or personal data.
+- Keep functions small and pure where possible. Put business logic in /src/lib, not in components.
+- Accessibility: keyboard usable, alt text, sufficient contrast, respects prefers-reduced-motion.
+- Prefer small, reviewable changes. Explain what you changed.
