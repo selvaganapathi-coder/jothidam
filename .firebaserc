@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "srmfamilystore",
+    "dev": "srmfamilystore",
+    "prod": "srmfamilystore-prod"
+  }
+}

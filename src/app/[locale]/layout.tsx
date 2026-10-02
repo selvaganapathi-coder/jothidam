@@ -5,6 +5,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { FirebaseAuthProvider } from "@/components/firebase-auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { routing, type AppLocale } from "@/i18n/routing";
 
@@ -58,8 +59,10 @@ export default async function LocaleLayout({
     >
       <body className={`flex min-h-full flex-col ${bodyFont}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SiteHeader />
-          {children}
+          <FirebaseAuthProvider>
+            <SiteHeader />
+            {children}
+          </FirebaseAuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>
