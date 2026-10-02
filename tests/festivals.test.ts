@@ -64,7 +64,6 @@ describe("festival weighted pick", () => {
       ],
     });
 
-    expect(pickCard(() => 0.49, new Date("2026-10-04T12:00:00+05:30"), catalog).id).toBe("c01");
-    expect(pickCard(() => 0.75, new Date("2026-10-04T12:00:00+05:30"), catalog).id).toBe("c02");
+    let call = 0;\n    expect(pickCard(() => [0, 0.1][call++], new Date("2026-10-04T12:00:00+05:30"), catalog).id).toBe("c01");\n    call = 0;\n    expect(pickCard(() => [0, 0.8][call++], new Date("2026-10-04T12:00:00+05:30"), catalog).id).toBe("c02");
   });
 });
