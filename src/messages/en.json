@@ -11,7 +11,9 @@
     "tryAgain": "Try again",
     "streak": "Day streak: {count, plural, one {# day} other {# days}}",
     "nextPickIn": "Next pick in {time} IST",
-    "longestStreak": "Longest: {count}"
+    "longestStreak": "Longest: {count}",
+    "shareCard": "Share card",
+    "linkCopied": "Link copied"
   },
   "cardRarity": {
     "common": "Common",
@@ -41,4 +43,4 @@
     "network": "Network error. Check your connection and try again.",
     "unauthorized": "Your sign-in expired. Please try again."
   }
-}\n
+}
