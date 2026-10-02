@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMessaging } from "firebase-admin/messaging";
-import { FieldPath } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin";
 import { getDateKey } from "@/lib/streak";
@@ -50,7 +50,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       sent += 1;
     } else if (response?.error && INVALID_TOKEN_CODES.has(response.error.code)) {
       await getFirebaseAdminFirestore().collection("users").doc(recipient.uid).update({
-        "settings.fcmToken": FieldPath.delete(),
+        "settings.fcmToken": FieldValue.delete(),
         "settings.reminderOptIn": false,
       });
       removed += 1;
