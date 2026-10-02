@@ -1,4 +1,4 @@
-import { getFirebaseAuth, ensureAnonymousAuth, reauthenticateAnonymously } from "@/lib/firebase/client";
+import { ensureAnonymousAuth, reauthenticateAnonymously } from "@/lib/firebase/client";
 import type { Card } from "@/lib/cards";
 
 export type DailyPickApiResponse = {
