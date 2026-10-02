@@ -31,6 +31,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Start Firebase emulators
+        run: |
+          pnpm firebase:emulators > /tmp/firebase-emulators.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --silent --fail http://127.0.0.1:4000 > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --silent --fail http://127.0.0.1:4000 > /dev/null
+        env:
+          FIREBASE_PROJECT_ID: srmfamilystore
+
       - name: Lint
         run: pnpm lint
 
@@ -39,3 +52,7 @@ jobs:
 
       - name: Unit tests
         run: pnpm test run
+        env:
+          FIREBASE_PROJECT_ID: srmfamilystore
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
