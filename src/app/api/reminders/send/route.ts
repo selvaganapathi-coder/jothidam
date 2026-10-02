@@ -27,6 +27,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (originError) return originError;
   const rateLimitResponse = await enforceRateLimit(request);
   if (rateLimitResponse) return rateLimitResponse;
+  if ((request.headers.get("content-length") ?? "0") !== "0") {
+    return NextResponse.json({ error: "Request body not allowed" }, { status: 400 });
+  }
   if (!authorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
