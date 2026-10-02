@@ -91,7 +91,11 @@ export async function POST(request: Request): Promise<NextResponse> {
         snapshot.exists ? snapshot.data() : {},
       );
 
-      if (userState.lastPickDate === today && body.useSecondPickToken && userState.secondPickTokens > 0) {
+      if (
+        userState.lastPickDate === today &&
+        body.useSecondPickToken &&
+        userState.secondPickTokens > 0
+      ) {
         const card = cardSchema.parse(pickCard());
         const nextTokens = userState.secondPickTokens - 1;
 
@@ -148,8 +152,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         userState.streak,
       );
       const longestStreak = Math.max(userState.longestStreak, streak);
-      const milestoneRewards = getMilestoneRewards(userState.streak, streak);
-      const badges = Array.from(new Set([...userState.badges, ...milestoneRewards.badges]));
+      const milestoneRewards = getMilestoneRewards(
+        userState.streak,
+        streak,
+        userState.badges,
+      );
+      const badges = Array.from(
+        new Set([...userState.badges, ...milestoneRewards.badges]),
+      );
       const secondPickTokens =
         userState.secondPickTokens + milestoneRewards.secondPickTokens;
 
