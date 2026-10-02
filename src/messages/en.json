@@ -5,8 +5,16 @@
   },
   "home": {
     "pickCard": "Pick my card",
+    "picking": "The parrot is choosing your card…",
     "comeBackTomorrow": "Come back tomorrow for your next card.",
+    "alreadyPickedToday": "You already picked your card today. Come back tomorrow!",
+    "tryAgain": "Try again",
     "streak": "Day streak: {count, plural, one {# day} other {# days}}"
+  },
+  "cardRarity": {
+    "common": "Common",
+    "rare": "Rare",
+    "epic": "Epic"
   },
   "collection": {
     "title": "My collection",
