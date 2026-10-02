@@ -24,6 +24,17 @@ function getLimiter(): Ratelimit {
   return limiter;
 }
 
+export async function rejectUnexpectedBody(request: Request): Promise<NextResponse | null> {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > 0) {
+    return NextResponse.json({ error: "Request body not allowed" }, { status: 400 });
+  }
+  const body = await request.text();
+  return body.length === 0
+    ? null
+    : NextResponse.json({ error: "Request body not allowed" }, { status: 400 });
+}
+
 export function getClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
