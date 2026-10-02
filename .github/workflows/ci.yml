@@ -29,7 +29,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Start Firebase emulators
         run: |
@@ -52,6 +52,13 @@ jobs:
 
       - name: Unit tests
         run: pnpm test run
+        env:
+          FIREBASE_PROJECT_ID: srmfamilystore
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+
+      - name: Firestore rules tests
+        run: pnpm test:rules
         env:
           FIREBASE_PROJECT_ID: srmfamilystore
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
