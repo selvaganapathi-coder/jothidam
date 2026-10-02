@@ -2,7 +2,7 @@
 
 import { useReducedMotion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { FortuneCard } from "@/components/home/fortune-card";
 import type { DailyPickViewState } from "@/components/home/daily-pick-types";
@@ -12,6 +12,7 @@ import type { CardRarity } from "@/lib/cards";
 import { requestDailyPick, type RequestPickFn } from "@/lib/request-daily-pick";
 
 const CARD_COUNT = 5;
+const STORAGE_KEY = "jothidam.daily-pick.v2";
 
 type DailyPickExperienceProps = {
   requestPick?: RequestPickFn;
@@ -23,9 +24,72 @@ function rarityTranslationKey(rarity: CardRarity): "common" | "rare" | "epic" {
   return rarity;
 }
 
+function readStoredResult(): DailyPickViewState {
+  if (typeof window === "undefined") return { kind: "idle" };
+
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return { kind: "idle" };
+
+    const parsed = JSON.parse(raw) as DailyPickViewState;
+    if (
+      parsed.kind === "result" &&
+      parsed.card &&
+      typeof parsed.cardIndex === "number" &&
+      typeof parsed.nextPickAt === "string"
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Ignore invalid or unavailable session storage.
+  }
+
+  return { kind: "idle" };
+}
+
+function persistResult(state: Extract<DailyPickViewState, { kind: "result" }>) {
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Session storage is an enhancement, not a requirement.
+  }
+}
+
+function formatCountdown(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds].map((value) => value.toString().padStart(2, "0")).join(":");
+}
+
+function FlameIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12.8 2.7c.3 3.3-1.2 4.9-2.7 6.4-1.5 1.5-2.7 3-2.7 5.4A5.7 5.7 0 0 0 13 20.2a5.8 5.8 0 0 0 5.8-5.8c0-3.5-2.1-6.7-6-11.7Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12.4 11.2c.2 1.7-.8 2.4-1.3 3.3-.7 1.1-.2 2.8 1.7 3.2 1.7-.2 2.6-1.4 2.6-2.9 0-1.2-.7-2.3-3-3.6Z"
+      />
+    </svg>
+  );
+}
+
 export function DailyPickExperience({
   requestPick = requestDailyPick,
-  initialViewState = { kind: "idle" },
+  initialViewState,
   streakCount = 0,
 }: DailyPickExperienceProps) {
   const tHome = useTranslations("home");
@@ -33,68 +97,72 @@ export function DailyPickExperience({
   const tErrors = useTranslations("errors");
   const locale = useLocale() as AppLocale;
   const reducedMotion = useReducedMotion();
-
-  const [viewState, setViewState] =
-    useState<DailyPickViewState>(initialViewState);
+  const [viewState, setViewState] = useState<DailyPickViewState>(
+    initialViewState ?? readStoredResult(),
+  );
+  const [countdown, setCountdown] = useState(0);
 
   const isLoading = viewState.kind === "loading";
   const isResult = viewState.kind === "result";
   const flippedIndex = isResult ? viewState.cardIndex : null;
 
-  const statusLabel = useMemo(() => {
-    switch (viewState.kind) {
-      case "idle":
-        return "idle";
-      case "loading":
-        return "loading";
-      case "result":
-        return "result";
-      case "already-picked-today":
-        return "already-picked-today";
-      case "error":
-        return "error";
-      default:
-        return "idle";
+  useEffect(() => {
+    if (!isResult) {
+      setCountdown(0);
+      return;
     }
-  }, [viewState.kind]);
+
+    const update = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((Date.parse(viewState.nextPickAt) - Date.now()) / 1000),
+      );
+      setCountdown(remaining);
+    };
+
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [isResult, isResult ? viewState.nextPickAt : null]);
+
+  const statusLabel = useMemo(() => viewState.kind, [viewState.kind]);
 
   async function handlePick() {
     if (
       viewState.kind === "loading" ||
-      viewState.kind === "already-picked-today"
+      (viewState.kind === "result" && viewState.alreadyPicked)
     ) {
       return;
     }
 
     setViewState({ kind: "loading" });
 
-    try {
-      const outcome = await requestPick();
+    const outcome = await requestPick();
 
-      if (outcome.ok) {
-        setViewState({
-          kind: "result",
-          card: outcome.card,
-          cardIndex: outcome.cardIndex,
-        });
-        return;
-      }
-
-      if (outcome.reason === "already_picked") {
-        setViewState({ kind: "already-picked-today" });
-        return;
-      }
-
-      setViewState({ kind: "error" });
-    } catch {
-      setViewState({ kind: "error" });
+    if (outcome.ok) {
+      const result: DailyPickViewState = {
+        kind: "result",
+        card: outcome.card,
+        cardIndex: outcome.cardIndex,
+        streak: outcome.streak,
+        longestStreak: outcome.longestStreak,
+        alreadyPicked: outcome.alreadyPicked,
+        nextPickAt: outcome.nextPickAt,
+      };
+      setViewState(result);
+      persistResult(result);
+      return;
     }
+
+    setViewState({ kind: "error", reason: outcome.reason });
   }
 
   const pickDisabled =
     viewState.kind === "loading" ||
-    viewState.kind === "already-picked-today" ||
-    viewState.kind === "result";
+    (viewState.kind === "result" && viewState.alreadyPicked);
+
+  const streak = isResult ? viewState.streak : streakCount;
+  const longestStreak = isResult ? viewState.longestStreak : streakCount;
 
   return (
     <section
@@ -105,12 +173,9 @@ export function DailyPickExperience({
     >
       <ParrotCageScene isAnimating={isLoading} />
 
-      <div
-        className="flex justify-center gap-2"
-        data-testid="fortune-card-deck"
-      >
+      <div className="flex justify-center gap-2" data-testid="fortune-card-deck">
         {Array.from({ length: CARD_COUNT }).map((_, index) => {
-          const isFlipped = flippedIndex === index;
+          const isFlipped = isResult && flippedIndex === index;
           const card = isResult ? viewState.card : undefined;
 
           return (
@@ -131,38 +196,37 @@ export function DailyPickExperience({
       </div>
 
       <div className="flex flex-col gap-3">
-        {viewState.kind === "loading" ? (
-          <p className="text-center text-sm font-medium text-amber-900">
+        {isLoading ? (
+          <p className="text-center text-sm font-medium text-amber-900" data-testid="daily-pick-loading">
             {tHome("picking")}
           </p>
         ) : null}
 
-        {viewState.kind === "already-picked-today" ? (
-          <p
-            className="rounded-xl bg-amber-100 px-4 py-3 text-center text-sm font-medium text-amber-950"
-            data-testid="daily-pick-already-picked"
-          >
-            {tHome("alreadyPickedToday")}
-          </p>
+        {isResult ? (
+          <div className="rounded-xl bg-amber-100 px-4 py-3 text-center text-sm font-medium text-amber-950">
+            <p data-testid="daily-pick-result-summary">
+              {viewState.alreadyPicked
+                ? tHome("alreadyPickedToday")
+                : tHome("comeBackTomorrow")}
+            </p>
+            <p className="mt-1 font-mono text-xs" data-testid="daily-pick-countdown">
+              {tHome("nextPickIn", { time: formatCountdown(countdown) })}
+            </p>
+          </div>
         ) : null}
 
         {viewState.kind === "error" ? (
-          <p
+          <div
             className="rounded-xl bg-red-100 px-4 py-3 text-center text-sm font-medium text-red-900"
             data-testid="daily-pick-error"
             role="alert"
           >
-            {tErrors("generic")}
-          </p>
-        ) : null}
-
-        {viewState.kind === "result" ? (
-          <p
-            className="text-center text-sm text-zinc-600 dark:text-zinc-400"
-            data-testid="daily-pick-result-summary"
-          >
-            {tHome("comeBackTomorrow")}
-          </p>
+            {viewState.reason === "network"
+              ? tErrors("network")
+              : viewState.reason === "unauthorized"
+                ? tErrors("unauthorized")
+                : tErrors("generic")}
+          </div>
         ) : null}
 
         <button
@@ -171,16 +235,21 @@ export function DailyPickExperience({
           className="min-h-12 w-full rounded-full bg-zinc-900 px-6 py-4 text-base font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           disabled={pickDisabled}
           aria-busy={isLoading}
-          onClick={() => {
-            void handlePick();
-          }}
+          onClick={() => void handlePick()}
         >
           {viewState.kind === "error" ? tHome("tryAgain") : tHome("pickCard")}
         </button>
 
-        <p className="text-center text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          {tHome("streak", { count: streakCount })}
-        </p>
+        <div
+          className="flex items-center justify-center gap-5 text-sm font-medium text-zinc-800 dark:text-zinc-200"
+          data-testid="daily-pick-streak"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <FlameIcon />
+            {tHome("streak", { count: streak })}
+          </span>
+          <span>{tHome("longestStreak", { count: longestStreak })}</span>
+        </div>
       </div>
     </section>
   );

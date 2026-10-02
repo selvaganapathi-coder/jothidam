@@ -9,7 +9,9 @@
     "comeBackTomorrow": "Come back tomorrow for your next card.",
     "alreadyPickedToday": "You already picked your card today. Come back tomorrow!",
     "tryAgain": "Try again",
-    "streak": "Day streak: {count, plural, one {# day} other {# days}}"
+    "streak": "Day streak: {count, plural, one {# day} other {# days}}",
+    "nextPickIn": "Next pick in {time} IST",
+    "longestStreak": "Longest: {count}"
   },
   "cardRarity": {
     "common": "Common",
@@ -31,6 +33,8 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "notFound": "We could not find that page."
+    "notFound": "We could not find that page.",
+    "network": "Network error. Check your connection and try again.",
+    "unauthorized": "Your sign-in expired. Please try again."
   }
 }

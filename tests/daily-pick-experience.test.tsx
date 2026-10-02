@@ -81,6 +81,10 @@ describe("DailyPickExperience", () => {
       ok: true,
       card: sampleCard!,
       cardIndex: 2,
+      streak: 2,
+      longestStreak: 3,
+      alreadyPicked: false,
+      nextPickAt: "2026-10-03T18:30:00.000Z",
     });
 
     await waitFor(() => {
@@ -97,6 +101,10 @@ describe("DailyPickExperience", () => {
       ok: true,
       card: sampleCard!,
       cardIndex: 1,
+      streak: 2,
+      longestStreak: 4,
+      alreadyPicked: false,
+      nextPickAt: "2026-10-03T18:30:00.000Z",
     });
 
     renderExperience({ requestPick });
@@ -119,17 +127,42 @@ describe("DailyPickExperience", () => {
 
   it("renders already-picked-today state", () => {
     renderExperience({
-      initialViewState: { kind: "already-picked-today" },
+      initialViewState: {
+        kind: "result",
+        card: sampleCard!,
+        cardIndex: 1,
+        streak: 3,
+        longestStreak: 5,
+        alreadyPicked: true,
+        nextPickAt: "2026-10-03T18:30:00.000Z",
+      },
     });
 
     expect(screen.getByTestId("daily-pick-experience")).toHaveAttribute(
       "data-status",
       "already-picked-today",
     );
-    expect(screen.getByTestId("daily-pick-already-picked")).toHaveTextContent(
+    expect(screen.getByTestId("daily-pick-result-summary")).toHaveTextContent(
       "You already picked your card today",
     );
+    expect(screen.getByTestId("daily-pick-countdown")).toHaveTextContent("Next pick in");
     expect(screen.getByTestId("daily-pick-button")).toBeDisabled();
+  });
+
+  it("shows streak and longest streak from the API result", async () => {
+    const requestPick: RequestPickFn = async () => ({
+      ok: true,
+      card: sampleCard!,
+      cardIndex: 0,
+      streak: 7,
+      longestStreak: 12,
+      alreadyPicked: false,
+      nextPickAt: "2026-10-03T18:30:00.000Z",
+    });
+    renderExperience({ requestPick });
+    await userEvent.setup().click(screen.getByTestId("daily-pick-button"));
+    await waitFor(() => expect(screen.getByTestId("daily-pick-streak")).toHaveTextContent("7"));
+    expect(screen.getByTestId("daily-pick-streak")).toHaveTextContent("12");
   });
 
   it("renders error state and allows retry", async () => {
@@ -141,6 +174,10 @@ describe("DailyPickExperience", () => {
         ok: true,
         card: sampleCard!,
         cardIndex: 0,
+        streak: 1,
+        longestStreak: 1,
+        alreadyPicked: false,
+        nextPickAt: "2026-10-03T18:30:00.000Z",
       });
 
     renderExperience({ requestPick });
