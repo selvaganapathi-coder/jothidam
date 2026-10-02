@@ -27,7 +27,8 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  const i18nResponse = handleI18nRouting(request);
+  const requestWithHeaders = new NextRequest(request, { headers: requestHeaders });
+  const i18nResponse = handleI18nRouting(requestWithHeaders);
   const response = i18nResponse ?? new Response(null);
   response.headers.set("Content-Security-Policy", csp);
   response.headers.set("x-nonce", nonce);
