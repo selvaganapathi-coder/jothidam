@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { enforceRateLimit, rejectUnexpectedOrigin } from "@/lib/security/api";
+import { enforceRateLimit, rejectUnexpectedBody, rejectUnexpectedOrigin } from "@/lib/security/api";
 
 export async function GET(request: Request): Promise<NextResponse> {
   const originError = rejectUnexpectedOrigin(request);
   if (originError) return originError;
   const rateLimitResponse = await enforceRateLimit(request);
   if (rateLimitResponse) return rateLimitResponse;
+  const bodyError = await rejectUnexpectedBody(request);
+  if (bodyError) return bodyError;
   return new NextResponse(
     `self.FIREBASE_CONFIG = ${JSON.stringify({
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
