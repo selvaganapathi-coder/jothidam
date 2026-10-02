@@ -8,6 +8,7 @@ const clientFirebaseEnvSchema = z.object({
   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1).optional(),
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1).optional(),
   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_USE_FIREBASE_EMULATORS: z
     .enum(["true", "false"])
     .optional()
