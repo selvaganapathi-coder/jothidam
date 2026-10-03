@@ -3,7 +3,12 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
 import { verifyAppCheck } from "@/lib/firebase/admin-app-check";
-import { enforceRateLimit, parseJsonBody, rejectUnexpectedOrigin, requestBodyLimits } from "@/lib/security/api";
+import {
+  enforceRateLimit,
+  parseJsonBody,
+  rejectUnexpectedOrigin,
+  requestBodyLimits,
+} from "@/lib/security/api";
 
 import { cardSchema, getCardById, pickCard } from "@/lib/cards";
 import {
@@ -21,9 +26,11 @@ const authorizationSchema = z.string().regex(/^Bearer\s+\S+$/i);
 
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-const requestBodySchema = z.object({
-  useSecondPickToken: z.boolean().default(false),
-}).strict();
+const requestBodySchema = z
+  .object({
+    useSecondPickToken: z.boolean().default(false),
+  })
+  .strict();
 
 const userStateSchema = z.object({
   lastPickDate: dateKeySchema.optional(),
@@ -80,8 +87,6 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const rawBody = await request.text();
-    const body = requestBodySchema.parse(rawBody ? JSON.parse(rawBody) : {});
     const auth = getFirebaseAdminAuth();
     const decodedToken = await auth.verifyIdToken(token);
     const uid = z.string().min(1).parse(decodedToken.uid);
@@ -90,7 +95,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
     const rateLimitResponse = await enforceRateLimit(request, uid);
     if (rateLimitResponse) return rateLimitResponse;
-    const body = await parseJsonBody(request, requestBodySchema, requestBodyLimits.pick);
+    const body = await parseJsonBody(
+      request,
+      requestBodySchema,
+      requestBodyLimits.pick,
+    );
 
     const today = getDateKey();
     const nextPickAt = getNextPickAt(today);

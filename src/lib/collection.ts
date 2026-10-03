@@ -1,6 +1,9 @@
 import { doc, getDoc } from "firebase/firestore";
 
-import { ensureAnonymousAuth, getFirebaseFirestore } from "@/lib/firebase/client";
+import {
+  ensureAnonymousAuth,
+  getFirebaseFirestore,
+} from "@/lib/firebase/client";
 
 export type UserCollection = Record<string, number>;
 
@@ -17,9 +20,12 @@ export async function getUserCollection(): Promise<UserCollection> {
     return {};
   }
 
-  return Object.fromEntries(
-    Object.entries(value).filter(
-      ([, count]) => typeof count === "number" && Number.isFinite(count) && count > 0,
-    ),
-  );
+  const collection: UserCollection = {};
+  for (const [cardId, count] of Object.entries(value)) {
+    if (typeof count === "number" && Number.isFinite(count) && count > 0) {
+      collection[cardId] = count;
+    }
+  }
+
+  return collection;
 }

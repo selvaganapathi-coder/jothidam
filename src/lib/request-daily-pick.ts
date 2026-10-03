@@ -1,4 +1,7 @@
-import { ensureAnonymousAuth, reauthenticateAnonymously } from "@/lib/firebase/client";
+import {
+  ensureAnonymousAuth,
+  reauthenticateAnonymously,
+} from "@/lib/firebase/client";
 import { getFirebaseAppCheckToken } from "@/lib/firebase/app-check";
 import type { Card } from "@/lib/cards";
 
@@ -10,21 +13,34 @@ export type DailyPickApiResponse = {
   nextPickAt: string;
 };
 
-export type RequestPickFailureReason = "already_picked" | "unauthorized" | "network" | "error";
+export type RequestPickFailureReason =
+  "already_picked" | "unauthorized" | "network" | "error";
 
 export type RequestPickResult =
-  | { ok: true; card: Card; streak: number; longestStreak: number; alreadyPicked: boolean; nextPickAt: string; cardIndex: number }
+  | {
+      ok: true;
+      card: Card;
+      streak: number;
+      longestStreak: number;
+      alreadyPicked: boolean;
+      nextPickAt: string;
+      cardIndex: number;
+    }
   | { ok: false; reason: RequestPickFailureReason };
 
 export type RequestPickFn = () => Promise<RequestPickResult>;
 
 async function postPick(): Promise<Response> {
   const user = await ensureAnonymousAuth();
-  const token = await user.getIdToken();\n  const appCheckToken = await getFirebaseAppCheckToken();
+  const token = await user.getIdToken();
+  const appCheckToken = await getFirebaseAppCheckToken();
 
   return fetch("/api/pick", {
     method: "POST",
-    headers: {\n      Authorization: `Bearer ${token}`,\n      ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),\n    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
+    },
     cache: "no-store",
   });
 }

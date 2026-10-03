@@ -1,4 +1,6 @@
-import { z } from "zod";\n\nimport { getActiveFestivals, getFestivalBoost } from "@/lib/festivals";
+import { z } from "zod";
+
+import { getActiveFestivals, getFestivalBoost } from "@/lib/festivals";
 
 import rawCardsData from "../../data/cards.json";
 
@@ -17,6 +19,15 @@ export const cardSchema = z.object({
   message: localizedTextSchema,
 });
 
+const festivalSchema = z.object({
+  id: z.string().min(1),
+  name: localizedTextSchema,
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  cardIds: z.array(z.string().min(1)).min(1),
+  boostedWeight: z.number().positive(),
+});
+
 export const cardsFileSchema = z
   .object({
     version: z.literal(1),
@@ -26,6 +37,7 @@ export const cardsFileSchema = z
       rare: z.number().positive(),
       epic: z.number().positive(),
     }),
+    festivals: z.array(festivalSchema).default([]),
     cards: z.array(cardSchema).min(1),
   })
   .superRefine((data, ctx) => {
@@ -109,16 +121,34 @@ function pickRarity(
   return "epic";
 }
 
-export function pickCard(rng: RandomFn = Math.random): Card {
-  const rarity = pickRarity(cardsCatalog.rarityWeights, rng);
-  const pool = cardsByRarity[rarity];
+export function pickCard(
+  rng: RandomFn = Math.random,
+  date: Date = new Date(),
+  catalog: CardsFile = cardsCatalog,
+): Card {
+  const rarity = pickRarity(catalog.rarityWeights, rng);
+  const pool =
+    catalog === cardsCatalog
+      ? cardsByRarity[rarity]
+      : catalog.cards.filter((card) => card.rarity === rarity);
 
   if (pool.length === 0) {
     throw new Error(`No cards available for rarity ${rarity}`);
   }
 
-  const index = Math.floor(rng() * pool.length);
-  const card = pool[index];
+  const festivals = getActiveFestivals(catalog, date);
+  const weights = pool.map((card) => getFestivalBoost(card, festivals));
+  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+  let roll = rng() * totalWeight;
+
+  let card = pool[pool.length - 1];
+  for (const [index, candidate] of pool.entries()) {
+    roll -= weights[index] ?? 0;
+    if (roll < 0) {
+      card = candidate;
+      break;
+    }
+  }
 
   if (!card) {
     throw new Error(`Failed to pick a card for rarity ${rarity}`);
