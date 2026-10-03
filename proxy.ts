@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 import { routing } from "./src/i18n/routing";
 
@@ -28,7 +28,9 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  const requestWithHeaders = new NextRequest(request, { headers: requestHeaders });
+  const requestWithHeaders = new NextRequest(request, {
+    headers: requestHeaders,
+  });
   const i18nResponse = handleI18nRouting(requestWithHeaders);
   const response = i18nResponse ?? new Response(null);
   response.headers.set("Content-Security-Policy", csp);
@@ -37,5 +39,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sw.js|firebase-messaging-sw.js).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|sw.js|firebase-messaging-sw.js).*)",
+  ],
 };

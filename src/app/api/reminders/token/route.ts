@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { z } from "zod";\nimport { enforceRateLimit, parseJsonBody, rejectUnexpectedOrigin, requestBodyLimits } from "@/lib/security/api";
+import { z } from "zod";
+import {
+  enforceRateLimit,
+  parseJsonBody,
+  rejectUnexpectedOrigin,
+  requestBodyLimits,
+} from "@/lib/security/api";
 
 import {
   getFirebaseAdminAuth,
@@ -9,39 +15,60 @@ import {
 
 const authorizationSchema = z.string().regex(/^Bearer\s+\S+$/i);
 
-export const tokenRequestSchema = z.object({
-  enabled: z.boolean(),
-  token: z.string().min(100).max(4096).optional(),
-  language: z.enum(["ta", "en"]).optional(),
-}).strict().superRefine((data, ctx) => {
-  if (data.enabled && !data.token) {
-    ctx.addIssue({ code: "custom", path: ["token"], message: "Token required when enabling reminders" });
-  }
-});
+export const tokenRequestSchema = z
+  .object({
+    enabled: z.boolean(),
+    token: z.string().min(100).max(4096).optional(),
+    language: z.enum(["ta", "en"]).optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.enabled && !data.token) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["token"],
+        message: "Token required when enabling reminders",
+      });
+    }
+  });
 
 function getBearerToken(request: Request): string | null {
-  const value = authorizationSchema.safeParse(request.headers.get("authorization"));
+  const value = authorizationSchema.safeParse(
+    request.headers.get("authorization"),
+  );
   return value.success ? value.data.replace(/^Bearer\s+/i, "") : null;
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const originError = rejectUnexpectedOrigin(request);\n  if (originError) return originError;\n  const bearer = getBearerToken(request);
-  if (!bearer) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const originError = rejectUnexpectedOrigin(request);
+  if (originError) return originError;
+  const bearer = getBearerToken(request);
+  if (!bearer)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const body = await parseJsonBody(request, tokenRequestSchema, requestBodyLimits.reminderToken);
+    const body = await parseJsonBody(
+      request,
+      tokenRequestSchema,
+      requestBodyLimits.reminderToken,
+    );
     const decoded = await getFirebaseAdminAuth().verifyIdToken(bearer);
-    const uid = z.string().min(1).parse(decoded.uid);\n    const rateLimitResponse = await enforceRateLimit(request, uid);\n    if (rateLimitResponse) return rateLimitResponse;
+    const uid = z.string().min(1).parse(decoded.uid);
+    const rateLimitResponse = await enforceRateLimit(request, uid);
+    if (rateLimitResponse) return rateLimitResponse;
     const ref = getFirebaseAdminFirestore().collection("users").doc(uid);
 
     if (body.enabled) {
-      await ref.set({
-        settings: {
-          fcmToken: body.token,
-          reminderOptIn: true,
-          ...(body.language ? { language: body.language } : {}),
+      await ref.set(
+        {
+          settings: {
+            fcmToken: body.token,
+            reminderOptIn: true,
+            ...(body.language ? { language: body.language } : {}),
+          },
         },
-      }, { merge: true });
+        { merge: true },
+      );
     } else {
       await ref.update({
         "settings.reminderOptIn": false,
@@ -51,7 +78,13 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json({ enabled: body.enabled });
   } catch (error: unknown) {
-    console.error("Reminder token request failed", error instanceof Error ? error.name : "UnknownError");
-    return NextResponse.json({ error: "Invalid reminder request" }, { status: 400 });
+    console.error(
+      "Reminder token request failed",
+      error instanceof Error ? error.name : "UnknownError",
+    );
+    return NextResponse.json(
+      { error: "Invalid reminder request" },
+      { status: 400 },
+    );
   }
 }

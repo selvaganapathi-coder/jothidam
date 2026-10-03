@@ -6,7 +6,7 @@ function parseDateKey(dateKey: string): [number, number, number] {
     throw new Error("Invalid date key");
   }
 
-  const [year, month, day] = dateKey.split("-").map(Number);
+  const [year = 0, month = 0, day = 0] = dateKey.split("-").map(Number);
   return [year, month, day];
 }
 
@@ -74,7 +74,6 @@ export function getNextPickAt(dateKey: string): string {
   // Asia/Kolkata is fixed at UTC+05:30.
   return new Date(nextDayUtc - 5.5 * 60 * 60 * 1000).toISOString();
 }
-
 
 export const STREAK_MILESTONES = [
   { streak: 3, badge: "streak-3" },

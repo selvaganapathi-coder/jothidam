@@ -1,8 +1,6 @@
 import type { CardsFile, Card } from "@/lib/cards";
 
 const IST_TIME_ZONE = "Asia/Kolkata";
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
 export function getIstDateKey(date: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: IST_TIME_ZONE,
@@ -13,9 +11,11 @@ export function getIstDateKey(date: Date = new Date()): string {
 
   const values: Record<string, string> = {};
   for (const part of parts) {
-    if (part.type === "year" || part.type === "month" || part.type === "day") values[part.type] = part.value;
+    if (part.type === "year" || part.type === "month" || part.type === "day")
+      values[part.type] = part.value;
   }
-  if (!values.year || !values.month || !values.day) throw new Error("Unable to determine IST date");
+  if (!values.year || !values.month || !values.day)
+    throw new Error("Unable to determine IST date");
   return `${values.year}-${values.month}-${values.day}`;
 }
 
@@ -31,7 +31,9 @@ export function getActiveFestivals(
   catalog: CardsFile,
   date: Date = new Date(),
 ): CardsFile["festivals"] {
-  return catalog.festivals.filter((festival) => isFestivalActive(festival, date));
+  return catalog.festivals.filter((festival) =>
+    isFestivalActive(festival, date),
+  );
 }
 
 export function getFestivalBoost(

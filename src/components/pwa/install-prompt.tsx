@@ -37,10 +37,7 @@ export function InstallPrompt({ locale }: { locale: AppLocale }) {
       setVisible(true);
     };
 
-    window.addEventListener(
-      "beforeinstallprompt",
-      handleBeforeInstallPrompt,
-    );
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () =>
       window.removeEventListener(
@@ -54,8 +51,11 @@ export function InstallPrompt({ locale }: { locale: AppLocale }) {
   const isTamil = locale === "ta";
 
   async function handleInstall() {
-    await installEvent.prompt();
-    await installEvent.userChoice;
+    const event = installEvent;
+    if (!event) return;
+
+    await event.prompt();
+    await event.userChoice;
     setVisible(false);
     setInstallEvent(null);
   }
@@ -68,7 +68,9 @@ export function InstallPrompt({ locale }: { locale: AppLocale }) {
 
   return (
     <aside
-      aria-label={isTamil ? "முகப்புத் திரையில் சேர்க்கவும்" : "Add to Home Screen"}
+      aria-label={
+        isTamil ? "முகப்புத் திரையில் சேர்க்கவும்" : "Add to Home Screen"
+      }
       className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
       data-testid="install-prompt"
     >
@@ -81,7 +83,9 @@ export function InstallPrompt({ locale }: { locale: AppLocale }) {
         />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-zinc-950 dark:text-zinc-50">
-            {isTamil ? "Aanmigam-ஐ முகப்புத் திரையில் சேர்க்கவும்" : "Add Aanmigam to your Home Screen"}
+            {isTamil
+              ? "Aanmigam-ஐ முகப்புத் திரையில் சேர்க்கவும்"
+              : "Add Aanmigam to your Home Screen"}
           </p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
             {isTamil
